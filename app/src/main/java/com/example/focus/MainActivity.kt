@@ -1,0 +1,125 @@
+package com.example.focus
+
+import android.app.NotificationManager
+import android.content.Intent
+import android.media.AudioManager
+import android.os.Bundle
+import android.provider.Settings
+import android.view.WindowManager
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import com.example.focus.ui.screen.FocusTimerScreen
+import com.example.focus.ui.theme.FocusTheme
+
+class MainActivity : ComponentActivity() {
+
+    private lateinit var notificationManager: NotificationManager
+    private lateinit var audioManager: AudioManager
+    private var previousInterruptionFilter: Int = NotificationManager.INTERRUPTION_FILTER_ALL
+    private var previousRingerMode: Int = AudioManager.RINGER_MODE_NORMAL
+    private var previousRingVolume: Int = -1
+    private var previousNotificationVolume: Int = -1
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        audioManager = getSystemService(AUDIO_SERVICE) as AudioManager
+        enableEdgeToEdge()
+        setContent {
+            FocusTheme {
+                FocusTimerScreen(
+                    onRequestLockTask = { startFocusLock() },
+                    onRequestUnlockTask = { stopFocusLock() },
+                    onRequestDndPermission = { requestDndPermission() },
+                    hasDndPermission = { hasDndPermission() },
+                )
+            }
+        }
+    }
+
+    private fun hasDndPermission(): Boolean {
+        return notificationManager.isNotificationPolicyAccessGranted
+    }
+
+    private fun requestDndPermission() {
+        if (!hasDndPermission()) {
+            val intent = Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS)
+            startActivity(intent)
+        }
+    }
+
+    private fun startFocusLock() {
+        // Keep screen on while timer is running so the app stays visible
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+
+        // Lock task to pin the screen and prevent leaving/switching apps
+        try {
+            startLockTask()
+        } catch (_: Exception) {
+            // Screen pinning might fail if not supported or disallowed
+        }
+
+        // Explicitly mute ringtone and notification audio streams
+        try {
+            previousRingerMode = audioManager.ringerMode
+            previousRingVolume = audioManager.getStreamVolume(AudioManager.STREAM_RING)
+            previousNotificationVolume = audioManager.getStreamVolume(AudioManager.STREAM_NOTIFICATION)
+
+            audioManager.setStreamVolume(AudioManager.STREAM_RING, 0, 0)
+            audioManager.setStreamVolume(AudioManager.STREAM_NOTIFICATION, 0, 0)
+            audioManager.ringerMode = AudioManager.RINGER_MODE_SILENT
+        } catch (_: Exception) {
+            // Fallback gracefully
+        }
+
+        // Set Do Not Disturb mode to NONE to block all incoming calls, messages and notifications
+        try {
+            if (hasDndPermission()) {
+                previousInterruptionFilter = notificationManager.currentInterruptionFilter
+                notificationManager.setInterruptionFilter(NotificationManager.INTERRUPTION_FILTER_NONE)
+            }
+        } catch (_: Exception) {
+            // Fallback gracefully
+        }
+    }
+
+    private fun stopFocusLock() {
+        // Clear keep screen on flag
+        window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+
+        // Unpin screen
+        try {
+            stopLockTask()
+        } catch (_: Exception) {
+            // Fallback gracefully
+        }
+
+        // Restore previous Do Not Disturb setting
+        try {
+            if (hasDndPermission()) {
+                notificationManager.setInterruptionFilter(previousInterruptionFilter)
+            }
+        } catch (_: Exception) {
+            // Fallback gracefully
+        }
+
+        // Restore previous ringer mode and stream volumes
+        try {
+            audioManager.ringerMode = previousRingerMode
+            if (previousRingVolume >= 0) {
+                audioManager.setStreamVolume(AudioManager.STREAM_RING, previousRingVolume, 0)
+            }
+            if (previousNotificationVolume >= 0) {
+                audioManager.setStreamVolume(AudioManager.STREAM_NOTIFICATION, previousNotificationVolume, 0)
+            }
+        } catch (_: Exception) {
+            // Fallback gracefully
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        stopFocusLock()
+    }
+}
