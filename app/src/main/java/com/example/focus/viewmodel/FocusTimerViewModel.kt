@@ -2,7 +2,9 @@ package com.example.focus.viewmodel
 
 import android.app.Application
 import android.content.Context
+import android.media.AudioManager
 import android.media.RingtoneManager
+import android.media.ToneGenerator
 import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -56,7 +58,35 @@ class FocusTimerViewModel(application: Application) : AndroidViewModel(applicati
     )
     val dontAskDndPermission: StateFlow<Boolean> = _dontAskDndPermission.asStateFlow()
 
+    private var toneGenerator: ToneGenerator? = null
     private var timerJob: Job? = null
+
+    private fun getToneGenerator(): ToneGenerator? {
+        if (toneGenerator == null) {
+            try {
+                // Gentle, non-annoying volume level (30 out of 100)
+                toneGenerator = ToneGenerator(AudioManager.STREAM_ALARM, 30)
+            } catch (_: Throwable) {
+                // Fallback for non-Android / unit test environments
+            }
+        }
+        return toneGenerator
+    }
+
+    private fun playCountdownTick(remainingSeconds: Int) {
+        try {
+            val tg = getToneGenerator() ?: return
+            if (remainingSeconds == 1) {
+                // Subtle confirmation beep for the final second
+                tg.startTone(ToneGenerator.TONE_PROP_ACK, 70)
+            } else {
+                // Soft, pleasant tick sound for seconds 5, 4, 3, 2
+                tg.startTone(ToneGenerator.TONE_PROP_BEEP, 50)
+            }
+        } catch (_: Throwable) {
+            // Safe fallback
+        }
+    }
 
     fun setDontAskDndPermission(dontAsk: Boolean) {
         _dontAskDndPermission.value = dontAsk
@@ -74,6 +104,10 @@ class FocusTimerViewModel(application: Application) : AndroidViewModel(applicati
             while (isActive && _remainingTimeSeconds.value > 0) {
                 delay(1000L)
                 _remainingTimeSeconds.value -= 1
+                val remaining = _remainingTimeSeconds.value
+                if (remaining in 1..15) {
+                    playCountdownTick(remaining)
+                }
             }
             if (_remainingTimeSeconds.value <= 0 && _isRunning.value) {
                 _isRunning.value = false
@@ -128,6 +162,15 @@ class FocusTimerViewModel(application: Application) : AndroidViewModel(applicati
             }
         } catch (_: Throwable) {
             // Fallback for non-Android environments (e.g. unit tests)
+        }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        try {
+            toneGenerator?.release()
+            toneGenerator = null
+        } catch (_: Throwable) {
         }
     }
 }

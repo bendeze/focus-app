@@ -96,4 +96,16 @@ class FocusTimerViewModelTest {
         assertFalse(viewModel.isRunning.value)
         assertEquals(1500, viewModel.remainingTimeSeconds.value)
     }
+
+    @Test
+    fun countdown_triggersTicksAtFiveSecondsRemaining() = runTest(testScheduler) {
+        viewModel.setMode(TimerMode.SHORT_BREAK)
+        viewModel.play()
+
+        advanceTimeBy(295005L)
+        assertEquals(5, viewModel.remainingTimeSeconds.value)
+
+        advanceTimeBy(4000L)
+        assertEquals(1, viewModel.remainingTimeSeconds.value)
+    }
 }
