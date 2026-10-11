@@ -3,6 +3,7 @@ package com.example.focus
 import android.app.NotificationManager
 import android.content.Intent
 import android.media.AudioManager
+import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
 import android.view.WindowManager
@@ -43,9 +44,32 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun requestDndPermission() {
+        stopFocusLock()
         if (!hasDndPermission()) {
-            val intent = Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS)
-            startActivity(intent)
+            try {
+                val intent = Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS).apply {
+                    data = Uri.fromParts("package", packageName, null)
+                }
+                startActivity(intent)
+            } catch (_: Exception) {
+                try {
+                    val fallbackIntent = Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS)
+                    startActivity(fallbackIntent)
+                } catch (_: Exception) {
+                    try {
+                        val appDetailsIntent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                            data = Uri.fromParts("package", packageName, null)
+                        }
+                        startActivity(appDetailsIntent)
+                    } catch (_: Exception) {
+                        try {
+                            val generalSettingsIntent = Intent(Settings.ACTION_SETTINGS)
+                            startActivity(generalSettingsIntent)
+                        } catch (_: Exception) {
+                        }
+                    }
+                }
+            }
         }
     }
 

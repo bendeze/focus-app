@@ -11,55 +11,56 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
-    primary = TomatoRedDark,
-    onPrimary = OnTomatoRedDark,
-    primaryContainer = TomatoRedContainerDark,
-    onPrimaryContainer = OnTomatoRedContainerDark,
-    secondary = SecondaryCoralDark,
-    onSecondary = OnSecondaryCoralDark,
-    secondaryContainer = SecondaryCoralContainerDark,
-    onSecondaryContainer = OnSecondaryCoralContainerDark,
-    tertiary = TertiaryAmberDark,
-    onTertiary = OnTertiaryAmberDark,
-    tertiaryContainer = TertiaryAmberContainerDark,
-    onTertiaryContainer = OnTertiaryAmberContainerDark,
+    primary = PrimaryDark,
+    onPrimary = OnPrimaryDark,
+    primaryContainer = PrimaryContainerDark,
+    onPrimaryContainer = OnPrimaryContainerDark,
+    secondary = SecondaryDark,
+    onSecondary = OnSecondaryDark,
+    secondaryContainer = SecondaryContainerDark,
+    onSecondaryContainer = OnSecondaryContainerDark,
+    tertiary = TertiaryDark,
+    onTertiary = OnTertiaryDark,
+    tertiaryContainer = TertiaryContainerDark,
+    onTertiaryContainer = OnTertiaryContainerDark,
     background = BackgroundDark,
     onBackground = OnBackgroundDark,
     surface = SurfaceDark,
     onSurface = OnSurfaceDark,
     surfaceVariant = SurfaceVariantDark,
     onSurfaceVariant = OnSurfaceVariantDark,
-    outline = OutlineDark
+    outline = OutlineDark,
+    outlineVariant = OutlineVariantDark,
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = TomatoRedLight,
-    onPrimary = OnTomatoRedLight,
-    primaryContainer = TomatoRedContainerLight,
-    onPrimaryContainer = OnTomatoRedContainerLight,
-    secondary = SecondaryCoralLight,
-    onSecondary = OnSecondaryCoralLight,
-    secondaryContainer = SecondaryCoralContainerLight,
-    onSecondaryContainer = OnSecondaryCoralContainerLight,
-    tertiary = TertiaryAmberLight,
-    onTertiary = OnTertiaryAmberLight,
-    tertiaryContainer = TertiaryAmberContainerLight,
-    onTertiaryContainer = OnTertiaryAmberContainerLight,
+    primary = PrimaryLight,
+    onPrimary = OnPrimaryLight,
+    primaryContainer = PrimaryContainerLight,
+    onPrimaryContainer = OnPrimaryContainerLight,
+    secondary = SecondaryLight,
+    onSecondary = OnSecondaryLight,
+    secondaryContainer = SecondaryContainerLight,
+    onSecondaryContainer = OnSecondaryContainerLight,
+    tertiary = TertiaryLight,
+    onTertiary = OnTertiaryLight,
+    tertiaryContainer = TertiaryContainerLight,
+    onTertiaryContainer = OnTertiaryContainerLight,
     background = BackgroundLight,
     onBackground = OnBackgroundLight,
     surface = SurfaceLight,
     onSurface = OnSurfaceLight,
     surfaceVariant = SurfaceVariantLight,
     onSurfaceVariant = OnSurfaceVariantLight,
-    outline = OutlineLight
+    outline = OutlineLight,
+    outlineVariant = OutlineVariantLight,
 )
 
 @Composable
 fun FocusTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
     dynamicColor: Boolean = false,
-    content: @Composable () -> Unit
+    content: @Composable () -> Unit,
 ) {
     val colorScheme = when {
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
@@ -74,6 +75,6 @@ fun FocusTheme(
     MaterialTheme(
         colorScheme = colorScheme,
         typography = Typography,
-        content = content
+        content = content,
     )
 }
