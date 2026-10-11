@@ -58,7 +58,7 @@ sdk.dir=/Users/your-username/Library/Android/sdk
 ### 3. API Base URL Configuration (Optional)
 Network endpoints are configured in `NetworkClient.kt` (`com/example/focus/data/api/NetworkClient.kt`):
 ```kotlin
-private const val BASE_URL = "https://api.yourdomain.com/"
+private const val BASE_URL = "https://focus-xxx.xxxxx.xxx/"
 ```
 *(To use a local development server, update `BASE_URL` to point to `http://10.0.2.2:8000/` for Android Emulator).*
 
