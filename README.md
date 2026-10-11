@@ -6,9 +6,9 @@ Focus is an offline-first, high-performance Android application designed for dee
 
 ## Visual Preview
 
-| Home Timer Screen | Task & Project Management | Sound & Timer Settings |
+| Home Timer Screen | Tasks & Projects Sheet | Apple Wheel Timer Picker |
 | :---: | :---: | :---: |
-| *(Main countdown display & status banner)* | *(Projects & Standalone Tasks cards)* | *(Apple-style duration picker & DND settings)* |
+| <img src="docs/screenshots/home_screen.png" width="260" /> | <img src="docs/screenshots/tasks_projects.png" width="260" /> | <img src="docs/screenshots/custom_timer.png" width="260" /> |
 
 ---
 
