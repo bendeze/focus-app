@@ -10,7 +10,11 @@ import java.util.concurrent.TimeUnit
 
 object NetworkClient {
 
-    private const val BASE_URL = "https://api.yourdomain.com/"
+    private val BASE_URL: String = try {
+        com.example.focus.BuildConfig.BASE_URL
+    } catch (_: Throwable) {
+        "https://api.yourdomain.com/"
+    }
 
     private val moshi: Moshi = Moshi.Builder()
         .addLast(KotlinJsonAdapterFactory())
