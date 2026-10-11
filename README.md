@@ -14,7 +14,7 @@ Focus is an offline-first, high-performance Android application designed for dee
     </td>
     <td align="center">
       <strong>Active Focus Session</strong><br/>
-      <img src="docs/screenshots/running_timer.png" width="220" alt="Active focus session" />
+      <img src="docs/screenshots/timer.png" width="220" alt="Active focus session" />
     </td>
   </tr>
   <tr>
