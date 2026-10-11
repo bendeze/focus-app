@@ -6,10 +6,28 @@ Focus is an offline-first, high-performance Android application designed for dee
 
 ## Visual Preview
 
-| Home Timer Screen | Active Focus Session | Tasks & Projects Sheet | Apple Wheel Timer Picker |
-| :---: | :---: | :---: | :---: |
-| <img src="docs/screenshots/home_screen.png" width="200" /> | <img src="docs/screenshots/running_timer.png" width="200" /> | <img src="docs/screenshots/tasks_projects.png" width="200" /> | <img src="docs/screenshots/custom_timer.png" width="200" /> |
-
+<table>
+  <tr>
+    <td align="center">
+      <strong>Home Screen</strong><br/>
+      <img src="docs/screenshots/home_screen.png" width="220" alt="Home timer screen" />
+    </td>
+    <td align="center">
+      <strong>Active Focus Session</strong><br/>
+      <img src="docs/screenshots/running_timer.png" width="220" alt="Active focus session" />
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <strong>Tasks & Projects</strong><br/>
+      <img src="docs/screenshots/tasks_projects.png" width="220" alt="Tasks and projects sheet" />
+    </td>
+    <td align="center">
+      <strong>Custom Timer</strong><br/>
+      <img src="docs/screenshots/custom_timer.png" width="220" alt="Custom timer picker" />
+    </td>
+  </tr>
+</table>
 ---
 
 ## Key Features
