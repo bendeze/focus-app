@@ -1,0 +1,5 @@
+# Location of the Android SDK
+sdk.dir=/Users/your-username/Library/Android/sdk
+
+# Private Backend Base API URL
+BASE_URL=https://api.yourdomain.com/
