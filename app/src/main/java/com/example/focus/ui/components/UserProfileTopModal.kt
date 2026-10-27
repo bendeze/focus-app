@@ -4,11 +4,18 @@ import android.graphics.Color
 import android.view.Gravity
 import android.view.WindowManager
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -27,9 +34,10 @@ import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Fingerprint
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Sync
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
@@ -77,11 +85,12 @@ import com.example.focus.data.repository.AuthState
 fun UserProfileTopModal(
     isVisible: Boolean,
     authState: AuthState,
-    syncState: SyncState = SyncState.Idle,
+    syncState: SyncState,
     onDismiss: () -> Unit,
     onOpenSettings: () -> Unit,
-    onTriggerSync: () -> Unit = {},
+    onTriggerSync: () -> Unit,
     onLogin: (identifier: String, password: String) -> Unit,
+    onBiometricLogin: (() -> Unit)? = null,
     onRegister: (identifier: String, password: String, fullName: String?) -> Unit,
     onUpdateProfile: (username: String?, email: String?, fullName: String?, avatarUrl: String?) -> Unit,
     onLogout: () -> Unit,
@@ -132,11 +141,12 @@ fun UserProfileTopModal(
                         modifier = Modifier
                             .fillMaxWidth()
                             .statusBarsPadding()
-                            .padding(horizontal = 24.dp, vertical = 24.dp)
+                            .padding(horizontal = 24.dp, vertical = 20.dp)
                             .verticalScroll(rememberScrollState()),
                         horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
                     ) {
-                        // Header Bar
+                        // Top Header Bar
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
@@ -147,7 +157,7 @@ fun UserProfileTopModal(
                                 shape = RoundedCornerShape(12.dp),
                             ) {
                                 Text(
-                                    text = if (authState is AuthState.Authenticated) "PROFILE" else "ACCOUNT",
+                                    text = if (authState is AuthState.Authenticated) "ACCOUNT" else "ACCOUNT",
                                     style = MaterialTheme.typography.labelSmall.copy(
                                         letterSpacing = 2.sp,
                                         fontWeight = FontWeight.Bold,
@@ -166,13 +176,10 @@ fun UserProfileTopModal(
                                     color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
                                     modifier = Modifier.size(36.dp),
                                 ) {
-                                    IconButton(onClick = {
-                                        onDismiss()
-                                        onOpenSettings()
-                                    }) {
+                                    IconButton(onClick = onOpenSettings) {
                                         Icon(
                                             imageVector = Icons.Default.Tune,
-                                            contentDescription = "App Settings",
+                                            contentDescription = "Settings",
                                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                             modifier = Modifier.size(18.dp),
                                         )
@@ -196,17 +203,18 @@ fun UserProfileTopModal(
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(18.dp))
-
                         when (authState) {
                             is AuthState.Loading -> {
                                 Box(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .height(160.dp),
+                                        .height(180.dp),
                                     contentAlignment = Alignment.Center,
                                 ) {
-                                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                                    CircularProgressIndicator(
+                                        color = MaterialTheme.colorScheme.primary,
+                                        strokeWidth = 3.dp,
+                                    )
                                 }
                             }
 
@@ -216,19 +224,17 @@ fun UserProfileTopModal(
                                     syncState = syncState,
                                     onTriggerSync = onTriggerSync,
                                     onUpdateProfile = onUpdateProfile,
-                                    onOpenSettings = {
-                                        onDismiss()
-                                        onOpenSettings()
-                                    },
+                                    onOpenSettings = onOpenSettings,
                                     onLogout = onLogout,
                                 )
                             }
 
                             else -> {
-                                val errorMessage = if (authState is AuthState.Error) authState.message else null
+                                val errorMessage = (authState as? AuthState.Error)?.message
                                 UnauthenticatedAuthContent(
                                     errorMessage = errorMessage,
                                     onLogin = onLogin,
+                                    onBiometricLogin = onBiometricLogin,
                                     onRegister = onRegister,
                                 )
                             }
@@ -292,38 +298,39 @@ private fun AuthenticatedProfileContent(
         }
 
         if (!isEditing) {
+            // View Mode Info Card
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 Text(
                     text = user.full_name ?: user.username ?: "Focus Member",
-                    style = MaterialTheme.typography.titleLarge,
+                    style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
                 )
-                val emailText = user.email
-                if (!emailText.isNullOrBlank()) {
+
+                if (!user.username.isNullOrBlank()) {
                     Text(
-                        text = emailText,
+                        text = "@${user.username}",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-                val usernameText = user.username
-                if (!usernameText.isNullOrBlank()) {
+
+                if (!user.email.isNullOrBlank()) {
                     Text(
-                        text = "@$usernameText",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.SemiBold,
+                        text = user.email,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
                     )
                 }
             }
 
-            // Sync Status Card
+            // Sync Status Indicator Card
             Surface(
-                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
-                shape = RoundedCornerShape(18.dp),
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
+                shape = RoundedCornerShape(20.dp),
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Row(
@@ -333,44 +340,41 @@ private fun AuthenticatedProfileContent(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Sync,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(20.dp),
+                    Column {
+                        Text(
+                            text = "Cloud Sync",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
-                        Column {
-                            Text(
-                                text = "Offline-First Sync",
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.Bold,
-                            )
-                            Text(
-                                text = when (syncState) {
-                                    is SyncState.Syncing -> "Syncing with cloud..."
-                                    is SyncState.Success -> syncState.message
-                                    is SyncState.Error -> "Offline Mode (Saved locally)"
-                                    else -> "Ready to sync"
-                                },
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
+                        Text(
+                            text = when (syncState) {
+                                is SyncState.Syncing -> "Syncing data..."
+                                is SyncState.Success -> syncState.message
+                                is SyncState.Error -> syncState.message
+                                else -> "Offline ready"
+                            },
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = if (syncState is SyncState.Error) {
+                                MaterialTheme.colorScheme.error
+                            } else {
+                                MaterialTheme.colorScheme.onSurface
+                            },
+                        )
                     }
 
                     IconButton(onClick = onTriggerSync) {
                         if (syncState is SyncState.Syncing) {
-                            CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                strokeWidth = 2.dp,
+                                color = MaterialTheme.colorScheme.primary,
+                            )
                         } else {
                             Icon(
-                                imageVector = Icons.Default.Sync,
+                                imageVector = Icons.Default.Refresh,
                                 contentDescription = "Sync Now",
                                 tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(20.dp),
                             )
                         }
                     }
@@ -512,6 +516,7 @@ private fun AuthenticatedProfileContent(
 private fun UnauthenticatedAuthContent(
     errorMessage: String?,
     onLogin: (identifier: String, password: String) -> Unit,
+    onBiometricLogin: (() -> Unit)? = null,
     onRegister: (identifier: String, password: String, fullName: String?) -> Unit,
 ) {
     var selectedTab by remember { mutableIntStateOf(0) } // 0 = Sign In, 1 = Register
@@ -594,7 +599,7 @@ private fun UnauthenticatedAuthContent(
                     trailingIcon = {
                         IconButton(onClick = { passwordVisible = !passwordVisible }) {
                             Icon(
-                                imageVector = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                                imageVector = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
                                 contentDescription = if (passwordVisible) "Hide password" else "Show password",
                             )
                         }
@@ -606,23 +611,45 @@ private fun UnauthenticatedAuthContent(
                     shape = RoundedCornerShape(20.dp),
                 )
 
-                Button(
-                    onClick = {
-                        if (identifierInput.isNotBlank() && passwordInput.isNotBlank()) {
-                            onLogin(identifierInput.trim(), passwordInput)
-                        }
-                    },
-                    enabled = identifierInput.isNotBlank() && passwordInput.isNotBlank(),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(50.dp),
-                    shape = RoundedCornerShape(25.dp),
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Text(
-                        text = "Sign In",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                    )
+                    Button(
+                        onClick = {
+                            if (identifierInput.isNotBlank() && passwordInput.isNotBlank()) {
+                                onLogin(identifierInput.trim(), passwordInput)
+                            }
+                        },
+                        enabled = identifierInput.isNotBlank() && passwordInput.isNotBlank(),
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(50.dp),
+                        shape = RoundedCornerShape(25.dp),
+                    ) {
+                        Text(
+                            text = "Sign In",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                        )
+                    }
+
+                    if (onBiometricLogin != null) {
+                        OutlinedButton(
+                            onClick = onBiometricLogin,
+                            modifier = Modifier.size(50.dp),
+                            shape = CircleShape,
+                            contentPadding = PaddingValues(0.dp),
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Fingerprint,
+                                contentDescription = "Sign In with Fingerprint",
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(26.dp),
+                            )
+                        }
+                    }
                 }
             }
         } else {
@@ -645,7 +672,7 @@ private fun UnauthenticatedAuthContent(
                     value = identifierInput,
                     onValueChange = { identifierInput = it },
                     label = { Text("Username or Email") },
-                    leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
+                    leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(20.dp),
@@ -654,12 +681,12 @@ private fun UnauthenticatedAuthContent(
                 OutlinedTextField(
                     value = passwordInput,
                     onValueChange = { passwordInput = it },
-                    label = { Text("Password (min 6 chars)") },
+                    label = { Text("Password (Min. 6 chars)") },
                     leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
                     trailingIcon = {
                         IconButton(onClick = { passwordVisible = !passwordVisible }) {
                             Icon(
-                                imageVector = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                                imageVector = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
                                 contentDescription = if (passwordVisible) "Hide password" else "Show password",
                             )
                         }
@@ -673,12 +700,8 @@ private fun UnauthenticatedAuthContent(
 
                 Button(
                     onClick = {
-                        if (identifierInput.isNotBlank() && passwordInput.length >= 6) {
-                            onRegister(
-                                identifierInput.trim(),
-                                passwordInput,
-                                fullNameInput.ifBlank { null },
-                            )
+                        if (identifierInput.isNotBlank() && passwordInput.isNotBlank()) {
+                            onRegister(identifierInput.trim(), passwordInput, fullNameInput.ifBlank { null })
                         }
                     },
                     enabled = identifierInput.isNotBlank() && passwordInput.length >= 6,

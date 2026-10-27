@@ -12,6 +12,8 @@ jobs:
   build_and_test:
     name: Build APK, Run Tests & Publish Release
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout Code Repository

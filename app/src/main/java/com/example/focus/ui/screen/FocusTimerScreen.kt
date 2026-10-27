@@ -132,6 +132,7 @@ fun FocusTimerScreen(
     onRequestUnlockTask: () -> Unit = {},
     onRequestDndPermission: () -> Unit = {},
     hasDndPermission: () -> Boolean = { true },
+    onTriggerBiometrics: (onSuccess: () -> Unit) -> Unit = {},
 ) {
     val timerMode by viewModel.timerMode.collectAsStateWithLifecycle()
     val remainingTimeSeconds by viewModel.remainingTimeSeconds.collectAsStateWithLifecycle()
@@ -383,6 +384,22 @@ fun FocusTimerScreen(
                         taskViewModel.loadData()
                     } else {
                         snackbarHostState.showSnackbar(result.exceptionOrNull()?.message ?: "Login failed")
+                    }
+                }
+            }
+        },
+        onBiometricLogin = {
+            onTriggerBiometrics {
+                authViewModel.loginWithBiometrics { result ->
+                    coroutineScope.launch {
+                        if (result.isSuccess) {
+                            val name = result.getOrNull()?.full_name ?: result.getOrNull()?.username ?: "Focus Member"
+                            snackbarHostState.showSnackbar("Authenticated with Fingerprint. Welcome, $name!")
+                            showProfileModal = false
+                            taskViewModel.loadData()
+                        } else {
+                            snackbarHostState.showSnackbar(result.exceptionOrNull()?.message ?: "Fingerprint login failed")
+                        }
                     }
                 }
             }

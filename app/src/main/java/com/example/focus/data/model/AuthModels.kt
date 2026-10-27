@@ -34,6 +34,8 @@ data class UserResponse(
     @Json(name = "full_name") val full_name: String? = null,
     @Json(name = "avatar_url") val avatar_url: String? = null,
     @Json(name = "is_active") val is_active: Boolean,
+    @Json(name = "role") val role: String = "user",
+    @Json(name = "is_admin") val is_admin: Boolean = false,
     @Json(name = "created_at") val created_at: String,
     @Json(name = "updated_at") val updated_at: String,
 )

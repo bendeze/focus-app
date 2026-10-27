@@ -86,7 +86,7 @@ class AuthRepository(
     }
 
     private fun clearSessionTokenOnly() {
-        // Keeps saved_identifier, saved_password_hash & cached_user_json so user CAN sign in offline again anytime!
+        // Keeps saved_identifier, saved_password_hash & cached_user_json so user CAN sign in offline or with fingerprint again anytime!
         prefs.edit().remove("access_token").apply()
     }
 
@@ -195,6 +195,17 @@ class AuthRepository(
                 _authState.value = AuthState.Unauthenticated
             }
         }
+    }
+
+    suspend fun loginWithBiometrics(): Result<UserResponse> {
+        val cachedUser = getCachedUserProfile()
+        if (cachedUser != null) {
+            _authState.value = AuthState.Authenticated(cachedUser)
+            return Result.success(cachedUser)
+        }
+        val errorMsg = "No local account found. Please sign in once with password."
+        _authState.value = AuthState.Error(errorMsg)
+        return Result.failure(Exception(errorMsg))
     }
 
     suspend fun register(

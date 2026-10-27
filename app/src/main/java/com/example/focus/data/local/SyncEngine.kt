@@ -128,31 +128,18 @@ class SyncEngine(
                                 title = t.title,
                                 description = t.description,
                                 project_id = t.projectId,
+                                status = t.status,
                                 priority = t.priority,
                                 estimated_minutes = t.estimatedMinutes,
                             ),
                         )
                         if (response.isSuccessful && response.body() != null) {
                             val serverT = response.body()!!
-                            var finalTask = serverT
-                            // If status was updated offline to in_progress or completed, update backend status!
-                            if (t.status != "todo") {
-                                val patchResp = taskApi.updateTask(
-                                    token = "Bearer $token",
-                                    id = serverT.id,
-                                    request = TaskUpdate(status = t.status),
-                                )
-                                if (patchResp.isSuccessful && patchResp.body() != null) {
-                                    finalTask = patchResp.body()!!
-                                } else {
-                                    finalTask = serverT.copy(status = t.status)
-                                }
-                            }
                             database.withTransaction {
                                 taskDao.deleteTaskById(t.id)
-                                taskDao.upsertTask(finalTask.toEntity(SyncStatus.SYNCED))
+                                taskDao.upsertTask(serverT.toEntity(SyncStatus.SYNCED))
                             }
-                            onIdReplaced?.invoke(t.id, finalTask.id)
+                            onIdReplaced?.invoke(t.id, serverT.id)
                         }
                     }
 

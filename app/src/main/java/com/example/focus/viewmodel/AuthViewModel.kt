@@ -24,6 +24,20 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun register(
+        identifier: String?,
+        username: String?,
+        email: String?,
+        password: String,
+        fullName: String?,
+        onResult: (Result<UserResponse>) -> Unit,
+    ) {
+        viewModelScope.launch {
+            val result = repository.register(identifier, username, email, password, fullName)
+            onResult(result)
+        }
+    }
+
     fun login(
         identifier: String,
         password: String,
@@ -35,16 +49,9 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun register(
-        identifier: String?,
-        username: String?,
-        email: String?,
-        password: String,
-        fullName: String?,
-        onResult: (Result<UserResponse>) -> Unit,
-    ) {
+    fun loginWithBiometrics(onResult: (Result<UserResponse>) -> Unit) {
         viewModelScope.launch {
-            val result = repository.register(identifier, username, email, password, fullName)
+            val result = repository.loginWithBiometrics()
             onResult(result)
         }
     }

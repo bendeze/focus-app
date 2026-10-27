@@ -63,6 +63,7 @@ data class TaskCreate(
     @Json(name = "title") val title: String,
     @Json(name = "description") val description: String? = null,
     @Json(name = "project_id") val project_id: String? = null,
+    @Json(name = "status") val status: String? = "todo",
     @Json(name = "priority") val priority: String? = "medium",
     @Json(name = "estimated_minutes") val estimated_minutes: Int? = 25,
 )

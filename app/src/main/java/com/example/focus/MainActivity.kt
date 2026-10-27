@@ -7,16 +7,20 @@ import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
 import android.view.WindowManager
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.fragment.app.FragmentActivity
 import com.example.focus.ui.screen.FocusTimerScreen
 import com.example.focus.ui.theme.FocusTheme
+import com.example.focus.util.BiometricPromptManager
+import com.example.focus.util.BiometricResult
 
-class MainActivity : ComponentActivity() {
+class MainActivity : FragmentActivity() {
 
     private lateinit var notificationManager: NotificationManager
     private lateinit var audioManager: AudioManager
+    private lateinit var biometricManager: BiometricPromptManager
+
     private var previousInterruptionFilter: Int = NotificationManager.INTERRUPTION_FILTER_ALL
     private var previousRingerMode: Int = AudioManager.RINGER_MODE_NORMAL
     private var previousRingVolume: Int = -1
@@ -26,6 +30,8 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         audioManager = getSystemService(AUDIO_SERVICE) as AudioManager
+        biometricManager = BiometricPromptManager(this)
+
         enableEdgeToEdge()
         setContent {
             FocusTheme {
@@ -34,6 +40,13 @@ class MainActivity : ComponentActivity() {
                     onRequestUnlockTask = { stopFocusLock() },
                     onRequestDndPermission = { requestDndPermission() },
                     hasDndPermission = { hasDndPermission() },
+                    onTriggerBiometrics = { onSuccess ->
+                        biometricManager.showBiometricPrompt { result ->
+                            if (result is BiometricResult.AuthenticationSuccess) {
+                                onSuccess()
+                            }
+                        }
+                    },
                 )
             }
         }
