@@ -36,6 +36,8 @@ jobs:
         run: ./gradlew testDebugUnitTest
 
       - name: Build Debug APK
+        env:
+          BASE_URL: ${{ secrets.PROD_BASE_URL }}
         run: ./gradlew assembleDebug
 
       - name: Rename APK for Release

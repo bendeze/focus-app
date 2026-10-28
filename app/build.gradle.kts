@@ -14,7 +14,10 @@ if (localPropertiesFile.exists()) {
     localProperties.load(FileInputStream(localPropertiesFile))
 }
 
-val baseUrl = localProperties.getProperty("BASE_URL") ?: "https://api.yourdomain.com/"
+val baseUrl = System.getenv("BASE_URL")
+    ?: project.findProperty("BASE_URL")?.toString()
+    ?: localProperties.getProperty("BASE_URL")
+    ?: "https://api.yourdomain.com/"
 
 android {
     namespace = "com.example.focus"
